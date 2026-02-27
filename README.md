@@ -8,8 +8,9 @@ Inspired by [sobolevn/dotfiles](https://github.com/sobolevn/dotfiles).
 
 | Path | Description |
 |---|---|
+| `Brewfile` | Homebrew taps, formulae, casks, Go tools & VS Code extensions |
 | `vscode/` | VS Code settings, keybindings & extensions list |
-| `install` | Bootstrap script — symlinks configs and installs extensions |
+| `install` | Bootstrap script — installs brew deps, symlinks configs |
 
 ## Installation
 

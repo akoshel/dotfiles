@@ -71,6 +71,22 @@ setup_vscode() {
 }
 
 # ---------------------------------------------------------------------------
+# Brewfile
+# ---------------------------------------------------------------------------
+
+setup_brew() {
+    info "Installing Homebrew dependencies…"
+
+    if ! command -v brew &>/dev/null; then
+        warn "Homebrew not found — skipping Brewfile"
+        return
+    fi
+
+    brew bundle --file="$DOTFILES_DIR/Brewfile" --no-lock
+    ok "Brewfile installed"
+}
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -78,6 +94,7 @@ main() {
     info "Dotfiles installer — $(date)"
     echo ""
 
+    setup_brew
     setup_vscode
 
     echo ""
