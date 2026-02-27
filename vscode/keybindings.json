@@ -1,0 +1,102 @@
+[
+    {
+        "key": "shift+space",
+        "command": "workbench.action.terminal.sendSequence",
+        "when": "terminalFocus && terminalShellIntegrationEnabled && !accessibilityModeEnabled && terminalShellType == 'pwsh'"
+    },
+    {
+        "key": "alt+space",
+        "command": "-workbench.action.terminal.sendSequence",
+        "when": "terminalFocus && terminalShellIntegrationEnabled && !accessibilityModeEnabled && terminalShellType == 'pwsh'"
+    },
+    {
+        "key": "ctrl+alt+space",
+        "command": "toggleSuggestionFocus",
+        "when": "suggestWidgetVisible && textInputFocus"
+    },
+    {
+        "key": "ctrl+alt+space",
+        "command": "-toggleSuggestionFocus",
+        "when": "suggestWidgetVisible && textInputFocus"
+    },
+    {
+        "key": "alt+space",
+        "command": "editor.action.triggerSuggest",
+        "when": "editorHasCompletionItemProvider && textInputFocus && !editorReadonly && !suggestWidgetVisible"
+    },
+    {
+        "key": "ctrl+space",
+        "command": "-editor.action.triggerSuggest",
+        "when": "editorHasCompletionItemProvider && textInputFocus && !editorReadonly && !suggestWidgetVisible"
+    },
+    {
+        "key": "alt+space",
+        "command": "-editor.action.previewDeclaration"
+    },
+    {
+        "key": "ctrl+cmd+l",
+        "command": "editor.action.transformToLowercase"
+    },
+    {
+        "key": "ctrl+cmd+u",
+        "command": "editor.action.transformToUppercase"
+    },
+    {
+        "key": "alt+1",
+        "command": "workbench.view.explorer",
+        "when": "viewContainer.workbench.view.explorer.enabled && !explorerViewletFocus"
+    },
+    {
+        "key": "cmd+1",
+        "command": "-workbench.view.explorer",
+        "when": "viewContainer.workbench.view.explorer.enabled && !explorerViewletFocus"
+    },
+    {
+        "key": "alt+2",
+        "command": "workbench.view.search",
+        "when": "workbench.view.search.active && neverMatch =~ /doesNotMatch/"
+    },
+    {
+        "key": "shift+cmd+f",
+        "command": "-workbench.view.search",
+        "when": "workbench.view.search.active && neverMatch =~ /doesNotMatch/"
+    },
+    {
+        "key": "alt+2",
+        "command": "workbench.view.search",
+        "when": "workbench.view.search.active && !searchViewletVisible"
+    },
+    {
+        "key": "cmd+3",
+        "command": "-workbench.view.search",
+        "when": "workbench.view.search.active && !searchViewletVisible"
+    },
+    {
+        "key": "alt+2",
+        "command": "outline.focus"
+    },
+    {
+        "key": "cmd+7",
+        "command": "-outline.focus"
+    },
+    {
+        "key": "alt+3",
+        "command": "workbench.panel.chat",
+        "when": "workbench.panel.chat.view.copilot.active"
+    },
+    {
+        "key": "ctrl+cmd+i",
+        "command": "-workbench.panel.chat",
+        "when": "workbench.panel.chat.view.copilot.active"
+    },
+    {
+        "key": "alt+4",
+        "command": "workbench.view.scm",
+        "when": "workbench.scm.active"
+    },
+    {
+        "key": "ctrl+shift+g",
+        "command": "-workbench.view.scm",
+        "when": "workbench.scm.active"
+    }
+]

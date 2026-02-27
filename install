@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+#
+# Bootstrap dotfiles — VS Code setup
+# Symlinks config files and installs extensions.
+#
+# Usage:
+#   bash install
+#
+
+set -euo pipefail
+
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+info()  { printf "\033[34m[info]\033[0m  %s\n"  "$1"; }
+ok()    { printf "\033[32m[ok]\033[0m    %s\n"  "$1"; }
+warn()  { printf "\033[33m[warn]\033[0m  %s\n"  "$1"; }
+error() { printf "\033[31m[error]\033[0m %s\n"  "$1"; }
+
+link_file() {
+    local src="$1" dst="$2"
+    if [ -L "$dst" ]; then
+        rm "$dst"
+    elif [ -f "$dst" ]; then
+        warn "Backing up existing $dst → ${dst}.backup"
+        mv "$dst" "${dst}.backup"
+    fi
+    ln -s "$src" "$dst"
+    ok "Linked $src → $dst"
+}
+
+# ---------------------------------------------------------------------------
+# VS Code
+# ---------------------------------------------------------------------------
+
+setup_vscode() {
+    info "Setting up VS Code…"
+
+    local vscode_user_dir="$HOME/Library/Application Support/Code/User"
+    if [ ! -d "$vscode_user_dir" ]; then
+        warn "VS Code user directory not found at $vscode_user_dir — skipping"
+        return
+    fi
+
+    # Symlink settings & keybindings
+    link_file "$DOTFILES_DIR/vscode/settings.json"    "$vscode_user_dir/settings.json"
+    link_file "$DOTFILES_DIR/vscode/keybindings.json"  "$vscode_user_dir/keybindings.json"
+
+    # Install extensions
+    local code_bin="/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code"
+    if [ ! -x "$code_bin" ]; then
+        code_bin="$(command -v code 2>/dev/null || true)"
+    fi
+
+    if [ -n "$code_bin" ]; then
+        info "Installing VS Code extensions…"
+        while IFS= read -r ext; do
+            [ -z "$ext" ] && continue
+            "$code_bin" --install-extension "$ext" --force 2>/dev/null || warn "Failed to install $ext"
+        done < "$DOTFILES_DIR/vscode/extensions.txt"
+        ok "Extensions installed"
+    else
+        warn "Could not find 'code' CLI — skipping extension install"
+        warn "Install the shell command from VS Code: Cmd+Shift+P → 'Shell Command: Install code command in PATH'"
+    fi
+
+    ok "VS Code setup complete"
+}
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+main() {
+    info "Dotfiles installer — $(date)"
+    echo ""
+
+    setup_vscode
+
+    echo ""
+    ok "All done!"
+}
+
+main "$@"

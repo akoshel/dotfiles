@@ -1,0 +1,58 @@
+{
+    "workbench.colorTheme": "Default Dark Modern",
+    "tabnine.experimentalAutoImports": true,
+    "editor.defaultFormatter": "hashicorp.terraform",
+    "telemetry.telemetryLevel": "off",
+    "terminal.integrated.persistentSessionReviveProcess": "never",
+    "terminal.integrated.enablePersistentSessions": false,
+    "git.openRepositoryInParentFolders": "never",
+    "editor.formatOnSave": true,
+    "editor.formatOnType": true,
+    "leetcode.workspaceFolder": "/Users/alexanderkoshelev/.leetcode",
+    "leetcode.defaultLanguage": "python3",
+    "leetcode.hint.commandShortcut": false,
+    "leetcode.hint.configWebviewMarkdown": false,
+    "github.copilot.enable": {
+        "*": true,
+        "plaintext": false,
+        "markdown": false,
+        "scminput": false
+    },
+    "github.copilot.advanced": {},
+    "leetcode.endpoint": "leetcode",
+    "search.useParentIgnoreFiles": true,
+    "github.copilot.editor.enableAutoCompletions": true,
+    "makefile.configureOnOpen": false,
+    "github.copilot.chat.generateTests.codeLens": true,
+    "python.createEnvironment.trigger": "off",
+    "github.copilot.chat.editor.temporalContext.enabled": true,
+    "gitlens.ai.model": "vscode",
+    "gitlens.ai.vscode.model": "copilot:claude-3.7-sonnet",
+    "github.copilot.nextEditSuggestions.enabled": false,
+    "docker.extension.enableComposeLanguageServer": false,
+    "github.copilot.selectedCompletionModel": "",
+    "azureTerraform.survey": {
+        "surveyPromptDate": "never",
+        "surveyPromptIgnoredCount": 0
+    },
+    "remote.SSH.connectTimeout": 120,
+    "remote.SSH.defaultExtensions": [
+        "amazonwebservices.aws-toolkit-vscode"
+    ],
+    "[dockercompose]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 2,
+        "editor.autoIndent": "advanced",
+        "editor.quickSuggestions": {
+            "other": true,
+            "comments": false,
+            "strings": true
+        },
+        "editor.defaultFormatter": "redhat.vscode-yaml"
+    },
+    "[github-actions-workflow]": {
+        "editor.defaultFormatter": "redhat.vscode-yaml"
+    },
+    "aws.cloudformation.telemetry.enabled": false,
+    "claudeCode.preferredLocation": "panel"
+}
