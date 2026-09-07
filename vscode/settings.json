@@ -7,4 +7,8 @@
   "yaml.format.bracketSpacing": false,
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "hashicorp.terraform",
+  "azureTerraform.survey": {
+    "surveyPromptDate": "never",
+    "surveyPromptIgnoredCount": 0
+  },
 }
