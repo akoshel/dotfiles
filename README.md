@@ -21,6 +21,7 @@ cd ~/codebase/dotfiles
 | `firefox/` | Preferences, containers, protocol handlers, extensions, bookmarks |
 | `git/` | Global gitignore |
 | `claude/` | Claude Code global `CLAUDE.md` |
+| `pre-zshenv`, `pre-zprofile`, `pre-zshrc` | zsh config, split by startup file |
 | `install` | Bootstrap script |
 
 Config is symlinked back to this repo, with any existing file moved aside to
@@ -36,8 +37,9 @@ tracked — both tools rewrite them as you approve permissions and trust repos, 
 they fill up with project paths and internal repo references. Only the global
 `CLAUDE.md` is versioned.
 
-**Shell config.** `~/.zshrc` is not tracked — it holds API tokens and
-credentials in plaintext. Move it across by hand.
+**Shell secrets.** The `pre-zsh*` files are tracked, but `~/.zshenv.local` —
+which they source, and which holds every API token — is not. Recreate it from
+Enpass on a new machine.
 
 **Personal browser data.** `firefox/bookmarks.json` is gitignored (it contains
 internal hostnames). `bash firefox/export` regenerates it; copy it to the new
@@ -47,6 +49,33 @@ machine by hand and `firefox/apply` will point you at the restore dialog.
 (security tooling, Office, VPN clients, remote support) is deliberately absent
 from the `Brewfile`, so `brew` and the MDM agent do not fight over the same
 app bundles. Those arrive on their own once the machine is enrolled.
+
+## zsh
+
+Three files, because zsh reads them at different times and it matters:
+
+| File | Read when | Holds |
+|---|---|---|
+| `pre-zshenv` → `~/.zshenv` | **every** zsh, including non-interactive | env vars, build flags, and the `source` of `~/.zshenv.local` |
+| `pre-zprofile` → `~/.zprofile` | login shells, after `path_helper` | `PATH` via `brew shellenv` |
+| `pre-zshrc` → `~/.zshrc` | interactive shells only | Oh My Zsh, theme, completion |
+
+Copy them into place by hand — `./install` deliberately does not, so it can
+never overwrite a shell that still has credentials in it:
+
+```bash
+cp pre-zshenv ~/.zshenv && cp pre-zprofile ~/.zprofile && cp pre-zshrc ~/.zshrc
+```
+
+Two things that are easy to get wrong and are why the split looks like this:
+
+- Tokens must be in `~/.zshenv`, not `~/.zshrc`. Only interactive shells read
+  `.zshrc`, so `uv sync` from a script, a VS Code task or a pre-commit hook
+  would not see `UV_INDEX_*_PASSWORD` and would fail against the private
+  indexes with a 401 that looks unexplainable from a working terminal.
+- `PATH` must be in `~/.zprofile`, not `~/.zshenv`. `/etc/zprofile` runs
+  `path_helper`, which rebuilds `PATH` with the system directories first and
+  everything else appended — putting `/opt/homebrew/bin` last.
 
 ## Homebrew and third-party taps
 

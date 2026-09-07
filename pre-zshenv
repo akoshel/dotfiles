@@ -1,0 +1,19 @@
+# ~/.zshenv — читается КАЖДЫМ zsh: интерактивным, login, и неинтерактивным
+# (скрипты, задачи VS Code, pre-commit, cron, launchd).
+#
+# Сюда идёт всё, что нужно сборке и пакетным менеджерам. Если положить это
+# в .zshrc, то `uv sync` из скрипта не достанет приватные индексы: .zshrc
+# читают только интерактивные оболочки.
+
+# Homebrew — чтобы brew-ные бинарники находились и в неинтерактивных шеллах.
+[ -x /opt/homebrew/bin/brew ] && eval "$(/opt/homebrew/bin/brew shellenv)"
+
+# Сборка confluent-kafka против brew-ного librdkafka.
+if [ -d /opt/homebrew/opt/librdkafka ]; then
+    export C_INCLUDE_PATH="/opt/homebrew/opt/librdkafka/include"
+    export LIBRARY_PATH="/opt/homebrew/opt/librdkafka/lib"
+fi
+
+# Креды. Токены GitLab / uv / poetry обязаны быть видны неинтерактивным
+# шеллам, иначе приватные индексы отвалятся в CI-подобных запусках.
+[ -f "$HOME/.zshenv.local" ] && source "$HOME/.zshenv.local"

@@ -1,0 +1,21 @@
+# ~/.zshrc — только интерактивная оболочка: промпт, плагины, дополнение.
+# Переменные окружения тут не задаём, им место в ~/.zshenv.
+
+# --- Oh My Zsh ------------------------------------------------------------
+export ZSH="$HOME/.oh-my-zsh"
+ZSH_THEME="lukerandall"
+
+CASE_SENSITIVE="false"
+HYPHEN_INSENSITIVE="false"
+HIST_STAMPS="yyyy-mm-dd"
+HIST_IGNORE_SPACE="true"
+
+plugins=(gitfast)
+
+source "$ZSH/oh-my-zsh.sh"
+
+# --- Автодополнение -------------------------------------------------------
+# Только после oh-my-zsh: он сам вызывает compinit.
+if [ -f /opt/homebrew/share/zsh-autocomplete/zsh-autocomplete.plugin.zsh ]; then
+    source /opt/homebrew/share/zsh-autocomplete/zsh-autocomplete.plugin.zsh
+fi
