@@ -1,46 +1,5 @@
+// Place your key bindings in this file to override the defaults
 [
-    {
-        "key": "shift+space",
-        "command": "workbench.action.terminal.sendSequence",
-        "when": "terminalFocus && terminalShellIntegrationEnabled && !accessibilityModeEnabled && terminalShellType == 'pwsh'"
-    },
-    {
-        "key": "alt+space",
-        "command": "-workbench.action.terminal.sendSequence",
-        "when": "terminalFocus && terminalShellIntegrationEnabled && !accessibilityModeEnabled && terminalShellType == 'pwsh'"
-    },
-    {
-        "key": "ctrl+alt+space",
-        "command": "toggleSuggestionFocus",
-        "when": "suggestWidgetVisible && textInputFocus"
-    },
-    {
-        "key": "ctrl+alt+space",
-        "command": "-toggleSuggestionFocus",
-        "when": "suggestWidgetVisible && textInputFocus"
-    },
-    {
-        "key": "alt+space",
-        "command": "editor.action.triggerSuggest",
-        "when": "editorHasCompletionItemProvider && textInputFocus && !editorReadonly && !suggestWidgetVisible"
-    },
-    {
-        "key": "ctrl+space",
-        "command": "-editor.action.triggerSuggest",
-        "when": "editorHasCompletionItemProvider && textInputFocus && !editorReadonly && !suggestWidgetVisible"
-    },
-    {
-        "key": "alt+space",
-        "command": "-editor.action.previewDeclaration"
-    },
-    {
-        "key": "ctrl+cmd+l",
-        "command": "editor.action.transformToLowercase"
-    },
-    {
-        "key": "ctrl+cmd+u",
-        "command": "editor.action.transformToUppercase"
-    },
     {
         "key": "alt+1",
         "command": "workbench.view.explorer",
@@ -53,31 +12,13 @@
     },
     {
         "key": "alt+2",
-        "command": "workbench.view.search",
-        "when": "workbench.view.search.active && neverMatch =~ /doesNotMatch/"
+        "command": "workbench.view.scm",
+        "when": "workbench.scm.active && activeViewlet != 'workbench.view.scm'"
     },
     {
-        "key": "shift+cmd+f",
-        "command": "-workbench.view.search",
-        "when": "workbench.view.search.active && neverMatch =~ /doesNotMatch/"
-    },
-    {
-        "key": "alt+2",
-        "command": "workbench.view.search",
-        "when": "workbench.view.search.active && !searchViewletVisible"
-    },
-    {
-        "key": "cmd+3",
-        "command": "-workbench.view.search",
-        "when": "workbench.view.search.active && !searchViewletVisible"
-    },
-    {
-        "key": "alt+2",
-        "command": "outline.focus"
-    },
-    {
-        "key": "cmd+7",
-        "command": "-outline.focus"
+        "key": "cmd+9",
+        "command": "-workbench.view.scm",
+        "when": "workbench.scm.active && activeViewlet != 'workbench.view.scm'"
     },
     {
         "key": "alt+3",
@@ -91,12 +32,24 @@
     },
     {
         "key": "alt+4",
-        "command": "workbench.view.scm",
-        "when": "workbench.scm.active"
+        "command": "workbench.view.extension.claude-sidebar-secondary"
     },
     {
-        "key": "ctrl+shift+g",
-        "command": "-workbench.view.scm",
-        "when": "workbench.scm.active"
+        "key": "shift+enter",
+        "command": "workbench.action.terminal.sendSequence",
+        "args": {
+            "text": "\u001b\r"
+        },
+        "when": "terminalFocus"
+    },
+    {
+        "key": "alt+`",
+        "command": "workbench.action.terminal.toggleTerminal",
+        "when": "terminal.active"
+    },
+    {
+        "key": "ctrl+`",
+        "command": "-workbench.action.terminal.toggleTerminal",
+        "when": "terminal.active"
     }
 ]

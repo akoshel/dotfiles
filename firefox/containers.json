@@ -1,0 +1,34 @@
+{
+  "identities": [
+    {
+      "color": "blue",
+      "icon": "fingerprint",
+      "l10nId": "user-context-personal",
+      "public": true,
+      "userContextId": 1
+    },
+    {
+      "color": "orange",
+      "icon": "briefcase",
+      "l10nId": "user-context-work",
+      "public": true,
+      "userContextId": 2
+    },
+    {
+      "color": "green",
+      "icon": "dollar",
+      "l10nId": "user-context-banking",
+      "public": true,
+      "userContextId": 3
+    },
+    {
+      "color": "pink",
+      "icon": "cart",
+      "l10nId": "user-context-shopping",
+      "public": true,
+      "userContextId": 4
+    }
+  ],
+  "lastUserContextId": 4,
+  "version": 6
+}

@@ -1,0 +1,11 @@
+// One-time seed preferences, merged into the profile's prefs.js by ../install.
+//
+// These describe UI arrangement. They are deliberately NOT in user.js so that
+// rearranging your toolbar on the new machine actually sticks — user.js would
+// overwrite it at the next launch. Re-run the installer with
+// FIREFOX_RESEED=1 to force these back to the versioned state.
+
+user_pref("browser.uiCustomization.horizontalTabstrip", "[\"firefox-view-button\",\"tabbrowser-tabs\",\"new-tab-button\",\"spring\",\"alltabs-button\"]");
+user_pref("browser.uiCustomization.navBarWhenVerticalTabs", "[\"sidebar-button\",\"back-button\",\"forward-button\",\"stop-reload-button\",\"customizableui-special-spring1\",\"vertical-spacer\",\"urlbar-container\",\"customizableui-special-spring2\",\"downloads-button\",\"fxa-toolbar-menu-button\",\"unified-extensions-button\",\"firefox-view-button\",\"alltabs-button\"]");
+user_pref("browser.uiCustomization.state", "{\"placements\":{\"widget-overflow-fixed-list\":[],\"unified-extensions-area\":[\"firefox-enpass_enpass_io-browser-action\",\"github-mermaid-extension_amercier_com-browser-action\",\"markdown-viewer_outofindex_com-browser-action\",\"_eddf1c58-948d-4e0e-9c42-e611e9050a97_-browser-action\"],\"nav-bar\":[\"sidebar-button\",\"back-button\",\"forward-button\",\"stop-reload-button\",\"customizableui-special-spring1\",\"vertical-spacer\",\"urlbar-container\",\"customizableui-special-spring2\",\"downloads-button\",\"ipprotection-button\",\"fxa-toolbar-menu-button\",\"unified-extensions-button\",\"alltabs-button\",\"reset-pbm-toolbar-button\",\"ai-window-toggle\"],\"TabsToolbar\":[],\"vertical-tabs\":[\"tabbrowser-tabs\"],\"PersonalToolbar\":[\"import-button\",\"personal-bookmarks\"]},\"seen\":[\"developer-button\",\"screenshot-button\",\"firefox-enpass_enpass_io-browser-action\",\"github-mermaid-extension_amercier_com-browser-action\",\"markdown-viewer_outofindex_com-browser-action\",\"reset-pbm-toolbar-button\",\"ipprotection-button\",\"_eddf1c58-948d-4e0e-9c42-e611e9050a97_-browser-action\",\"ai-window-toggle\"],\"dirtyAreaCache\":[\"nav-bar\",\"vertical-tabs\",\"PersonalToolbar\",\"TabsToolbar\",\"unified-extensions-area\"],\"currentVersion\":26,\"newElementCount\":2}");
+user_pref("browser.bookmarks.defaultLocation", "toolbar");

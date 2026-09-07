@@ -1,0 +1,53 @@
+{
+  "defaultHandlersVersion": {},
+  "mimeTypes": {
+    "application/pdf": {
+      "action": 3,
+      "extensions": [
+        "pdf"
+      ]
+    },
+    "image/avif": {
+      "action": 3,
+      "extensions": [
+        "avif"
+      ]
+    },
+    "image/webp": {
+      "action": 3,
+      "extensions": [
+        "webp"
+      ]
+    }
+  },
+  "schemes": {
+    "claude": {
+      "action": 4
+    },
+    "enpassauth": {
+      "action": 4
+    },
+    "macappstore": {
+      "action": 4
+    },
+    "mailto": {
+      "handlers": [
+        null,
+        {
+          "name": "Gmail",
+          "uriTemplate": "https://mail.google.com/mail/?extsrc=mailto&url=%s"
+        }
+      ],
+      "stubEntry": true
+    },
+    "msteams": {
+      "action": 4
+    },
+    "slack": {
+      "action": 4
+    },
+    "vscode": {
+      "action": 4
+    }
+  }
+}

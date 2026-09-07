@@ -1,0 +1,146 @@
+#!/usr/bin/env bash
+#
+# Apply the versioned Firefox configuration to the default profile.
+#
+# Usage:
+#   bash firefox/apply
+#   FIREFOX_RESEED=1 bash firefox/apply   # force UI-layout prefs back to repo state
+#
+# Firefox rewrites prefs.js on exit, so it must not be running while this
+# script edits it. Bookmarks are restored by hand from the Firefox UI — there
+# is no supported way to merge a bookmark tree into a live profile.
+#
+
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+FF_ROOT="$HOME/Library/Application Support/Firefox"
+
+info()  { printf "\033[34m[info]\033[0m  %s\n"  "$1"; }
+ok()    { printf "\033[32m[ok]\033[0m    %s\n"  "$1"; }
+warn()  { printf "\033[33m[warn]\033[0m  %s\n"  "$1"; }
+
+# --- Locate the profile ----------------------------------------------------
+
+if [ ! -f "$FF_ROOT/profiles.ini" ]; then
+    warn "Firefox has never run — launch it once so it creates a profile, then re-run"
+    exit 0
+fi
+
+# The [Install…] section names the profile Firefox actually launches, which is
+# not always the one flagged Default=1 under [Profile…].
+REL="$(awk -F= '/^\[Install/{ok=1} ok && /^Default=/{print $2; exit}' "$FF_ROOT/profiles.ini")"
+[ -n "$REL" ] || REL="$(awk -F= '/^Default=Profiles/{print $2; exit}' "$FF_ROOT/profiles.ini")"
+PROFILE="$FF_ROOT/$REL"
+
+[ -d "$PROFILE" ] || { warn "profile directory $PROFILE not found"; exit 1; }
+info "profile: $PROFILE"
+
+if pgrep -xq firefox; then
+    warn "Firefox is running — quit it first (it rewrites prefs.js on exit)"
+    exit 1
+fi
+
+# --- Preferences -----------------------------------------------------------
+
+ln -sf "$HERE/user.js" "$PROFILE/user.js"
+ok "linked user.js"
+
+# The UI-layout prefs are merged into prefs.js instead of user.js so that
+# rearranging the toolbar later actually persists.
+SEED_MARK="dotfiles-prefs-seed"
+if grep -q "$SEED_MARK" "$PROFILE/prefs.js" 2>/dev/null && [ -z "${FIREFOX_RESEED:-}" ]; then
+    ok "UI layout already seeded (FIREFOX_RESEED=1 to reapply)"
+else
+    [ -f "$PROFILE/prefs.js" ] || : > "$PROFILE/prefs.js"
+    cp "$PROFILE/prefs.js" "$PROFILE/prefs.js.backup"
+
+    python3 - "$PROFILE/prefs.js" "$HERE/prefs-seed.js" "$SEED_MARK" <<'PY'
+import re, sys
+
+prefs_path, seed_path, mark = sys.argv[1:4]
+
+seed = {}
+for line in open(seed_path):
+    m = re.match(r'user_pref\("([^"]+)",\s*(.*)\);\s*$', line)
+    if m:
+        seed[m.group(1)] = m.group(2)
+
+out, seen = [], set()
+for line in open(prefs_path):
+    m = re.match(r'user_pref\("([^"]+)",', line)
+    if m and m.group(1) in seed:
+        out.append(f'user_pref("{m.group(1)}", {seed[m.group(1)]});\n')
+        seen.add(m.group(1))
+    elif f"// {mark}" in line:
+        continue
+    else:
+        out.append(line)
+
+for key, value in seed.items():
+    if key not in seen:
+        out.append(f'user_pref("{key}", {value});\n')
+
+out.append(f"// {mark}\n")
+open(prefs_path, "w").writelines(out)
+print(f"  seeded {len(seed)} UI preferences")
+PY
+    ok "UI layout seeded into prefs.js (previous copy at prefs.js.backup)"
+fi
+
+# --- Containers and protocol handlers --------------------------------------
+
+for f in containers.json handlers.json; do
+    if [ -L "$PROFILE/$f" ]; then
+        rm "$PROFILE/$f"          # left over from an older version of this script
+    elif [ -e "$PROFILE/$f" ]; then
+        cp "$PROFILE/$f" "$PROFILE/$f.backup"
+    fi
+    cp "$HERE/$f" "$PROFILE/$f"
+    ok "copied $f"
+done
+
+# --- Extensions ------------------------------------------------------------
+# Resolve each GUID to its signed XPI on addons.mozilla.org and drop it into
+# the profile. Firefox prompts for approval on first launch; that is by design.
+
+mkdir -p "$PROFILE/extensions"
+while read -r guid; do
+    [ -z "$guid" ] && continue
+    case "$guid" in \#*) continue ;; esac
+
+    target="$PROFILE/extensions/$guid.xpi"
+    if [ -f "$target" ]; then
+        ok "extension present: $guid"
+        continue
+    fi
+
+    url="$(curl -fsS "https://addons.mozilla.org/api/v5/addons/addon/$guid/" 2>/dev/null \
+        | python3 -c 'import sys,json; print((json.load(sys.stdin).get("current_version") or {}).get("file",{}).get("url",""))' \
+        2>/dev/null || true)"
+
+    if [ -z "$url" ]; then
+        warn "could not resolve $guid on AMO — install it by hand"
+        continue
+    fi
+
+    if curl -fsSL "$url" -o "$target"; then
+        ok "downloaded $guid"
+    else
+        warn "download failed for $guid"
+        rm -f "$target"
+    fi
+done < "$HERE/extensions.txt"
+
+# --- Bookmarks -------------------------------------------------------------
+
+if [ -f "$HERE/bookmarks.json" ]; then
+    info "bookmarks.json is present — restore it from Firefox:"
+    info "  Bookmarks ▸ Manage Bookmarks ▸ Import and Backup ▸ Restore ▸ Choose File…"
+    info "  then pick $HERE/bookmarks.json"
+else
+    warn "no firefox/bookmarks.json (it is gitignored — copy it over by hand)"
+fi
+
+printf "\n"
+ok "Firefox configuration applied — restart Firefox to pick it up"

@@ -1,15 +1,21 @@
 #!/usr/bin/env bash
 #
-# Bootstrap dotfiles — VS Code setup
-# Symlinks config files and installs extensions.
+# Bootstrap this machine from the dotfiles repo.
 #
 # Usage:
-#   bash install
+#   ./install                  # everything
+#   ./install vscode firefox   # only the named steps
+#   ./install --list           # show available steps
+#
+# Safe to re-run. Config is symlinked back to this repo, with any pre-existing
+# file moved aside to *.backup first.
 #
 
 set -euo pipefail
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+STEPS=(homebrew brewfile git vscode claude firefox herdr)
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -18,72 +24,99 @@ DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 info()  { printf "\033[34m[info]\033[0m  %s\n"  "$1"; }
 ok()    { printf "\033[32m[ok]\033[0m    %s\n"  "$1"; }
 warn()  { printf "\033[33m[warn]\033[0m  %s\n"  "$1"; }
-error() { printf "\033[31m[error]\033[0m %s\n"  "$1"; }
+step()  { printf "\n\033[1;36m▸ %s\033[0m\n"    "$1"; }
 
 link_file() {
     local src="$1" dst="$2"
+    mkdir -p "$(dirname "$dst")"
+
     if [ -L "$dst" ]; then
+        [ "$(readlink "$dst")" = "$src" ] && { ok "already linked $dst"; return; }
         rm "$dst"
-    elif [ -f "$dst" ]; then
-        warn "Backing up existing $dst → ${dst}.backup"
+    elif [ -e "$dst" ]; then
+        warn "backing up $dst -> ${dst}.backup"
         mv "$dst" "${dst}.backup"
     fi
+
     ln -s "$src" "$dst"
-    ok "Linked $src → $dst"
+    ok "linked $dst"
 }
 
 # ---------------------------------------------------------------------------
-# VS Code
+# Steps
 # ---------------------------------------------------------------------------
+
+setup_homebrew() {
+    step "Homebrew"
+    if command -v brew >/dev/null 2>&1; then
+        ok "already installed ($(brew --version | head -1))"
+        return
+    fi
+
+    info "installing Homebrew…"
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+    ok "Homebrew installed"
+}
+
+setup_brewfile() {
+    step "Brewfile"
+    command -v brew >/dev/null 2>&1 || { warn "Homebrew missing — skipping"; return; }
+
+    # Homebrew 6 refuses to load formulae from third-party taps until trusted,
+    # and `brew bundle` reports them as unsatisfiable rather than failing loudly.
+    for tap in hashicorp/tap databricks/tap; do
+        info "trusting tap $tap"
+        brew trust --tap "$tap" 2>/dev/null || warn "could not trust $tap"
+    done
+
+    brew bundle install --file="$DOTFILES_DIR/Brewfile"
+    ok "Brewfile applied"
+}
+
+setup_git() {
+    step "git"
+    # ~/.gitconfig is not versioned — it carries an identity, not config.
+    link_file "$DOTFILES_DIR/git/ignore" "$HOME/.config/git/ignore"
+}
 
 setup_vscode() {
-    info "Setting up VS Code…"
+    step "VS Code"
+    local dir="$HOME/Library/Application Support/Code/User"
 
-    local vscode_user_dir="$HOME/Library/Application Support/Code/User"
-    if [ ! -d "$vscode_user_dir" ]; then
-        warn "VS Code user directory not found at $vscode_user_dir — skipping"
+    if [ ! -d "$dir" ]; then
+        warn "VS Code has never run (no $dir) — launch it once, then re-run this step"
         return
     fi
 
-    # Symlink settings & keybindings
-    link_file "$DOTFILES_DIR/vscode/settings.json"    "$vscode_user_dir/settings.json"
-    link_file "$DOTFILES_DIR/vscode/keybindings.json"  "$vscode_user_dir/keybindings.json"
-
-    # Install extensions
-    local code_bin="/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code"
-    if [ ! -x "$code_bin" ]; then
-        code_bin="$(command -v code 2>/dev/null || true)"
-    fi
-
-    if [ -n "$code_bin" ]; then
-        info "Installing VS Code extensions…"
-        while IFS= read -r ext; do
-            [ -z "$ext" ] && continue
-            "$code_bin" --install-extension "$ext" --force 2>/dev/null || warn "Failed to install $ext"
-        done < "$DOTFILES_DIR/vscode/extensions.txt"
-        ok "Extensions installed"
-    else
-        warn "Could not find 'code' CLI — skipping extension install"
-        warn "Install the shell command from VS Code: Cmd+Shift+P → 'Shell Command: Install code command in PATH'"
-    fi
-
-    ok "VS Code setup complete"
+    link_file "$DOTFILES_DIR/vscode/settings.json"    "$dir/settings.json"
+    link_file "$DOTFILES_DIR/vscode/keybindings.json" "$dir/keybindings.json"
+    info "extensions are installed from the Brewfile (vscode \"…\" entries)"
 }
 
-# ---------------------------------------------------------------------------
-# Brewfile
-# ---------------------------------------------------------------------------
+setup_claude() {
+    step "Claude Code"
+    # Only CLAUDE.md is versioned. settings.json is deliberately not: Claude Code
+    # rewrites it as you approve permissions, and it accumulates project paths.
+    link_file "$DOTFILES_DIR/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
+}
 
-setup_brew() {
-    info "Installing Homebrew dependencies…"
+setup_herdr() {
+    step "herdr"
+    command -v herdr >/dev/null 2>&1 || { warn "herdr not on PATH — skipping"; return; }
 
-    if ! command -v brew &>/dev/null; then
-        warn "Homebrew not found — skipping Brewfile"
-        return
-    fi
+    # herdr owns its agent hooks and overwrites them on update, so let it
+    # install them rather than versioning the generated scripts.
+    for agent in claude codex; do
+        herdr integration install "$agent" 2>/dev/null \
+            && ok "installed herdr $agent integration" \
+            || warn "could not install herdr $agent integration"
+    done
+}
 
-    brew bundle --file="$DOTFILES_DIR/Brewfile" --no-lock
-    ok "Brewfile installed"
+setup_firefox() {
+    step "Firefox"
+    bash "$DOTFILES_DIR/firefox/apply" || warn "Firefox setup reported a problem"
 }
 
 # ---------------------------------------------------------------------------
@@ -91,14 +124,35 @@ setup_brew() {
 # ---------------------------------------------------------------------------
 
 main() {
-    info "Dotfiles installer — $(date)"
-    echo ""
+    if [ "${1:-}" = "--list" ]; then
+        printf "%s\n" "${STEPS[@]}"
+        return
+    fi
 
-    setup_brew
-    setup_vscode
+    local requested=("$@")
+    [ ${#requested[@]} -eq 0 ] && requested=("${STEPS[@]}")
 
-    echo ""
-    ok "All done!"
+    for name in "${requested[@]}"; do
+        if ! printf "%s\n" "${STEPS[@]}" | grep -qx "$name"; then
+            warn "unknown step '$name' (see ./install --list)"
+            exit 1
+        fi
+    done
+
+    info "dotfiles installer — $(date '+%Y-%m-%d %H:%M')"
+    for name in "${requested[@]}"; do
+        "setup_$name"
+    done
+
+    printf "\n"
+    ok "done"
+    cat <<'NEXT'
+
+Still to do by hand (see README):
+  • copy firefox/bookmarks.json across, then restore it in Firefox
+  • sign in to Leapp / AWS, Slack, Enpass, Tailscale
+  • restart your terminal
+NEXT
 }
 
 main "$@"

@@ -1,0 +1,13 @@
+# Firefox extensions, one add-on GUID per line.
+#
+# ../install resolves each GUID against the addons.mozilla.org API and drops the
+# signed XPI into the profile. Firefox asks you to approve each one on first
+# launch — that prompt cannot be scripted away, and shouldn't be.
+#
+# Not listed, on purpose:
+#   {eddf1c58-948d-4e0e-9c42-e611e9050a97}  installed by the work MDM agent
+#   newtab@mozilla.org                      built into Firefox
+
+firefox-enpass@enpass.io
+github-mermaid-extension@amercier.com
+markdown-viewer@outofindex.com

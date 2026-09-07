@@ -1,2 +1,14 @@
 .DS_Store
 *.backup
+
+# --- Personal data: generated locally, transferred by hand, never committed --
+# `bash firefox/export` refreshes these; move them to the new machine over
+# Slack/AirDrop and let ./install pick them up from the repo working tree.
+firefox/bookmarks.json
+firefox/logins.json
+firefox/key4.db
+firefox/cookies.sqlite
+firefox/places.sqlite
+
+# --- Machine-local overrides and credentials --------------------------------
+*.local
