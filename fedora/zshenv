@@ -1,0 +1,12 @@
+# ~/.zshenv — читается КАЖДЫМ zsh, включая неинтерактивные (скрипты,
+# задачи VS Code, pre-commit).
+#
+# На Linux нет path_helper, поэтому PATH можно задавать прямо здесь —
+# отдельный .zprofile, как на маке, не нужен.
+
+typeset -U path   # без дублей при вложенных шеллах
+path=("$HOME/.local/bin" "$HOME/go/bin" $path)
+export PATH
+
+# Креды — не в репо. Должны быть видны и неинтерактивным шеллам.
+[ -f "$HOME/.zshenv.local" ] && source "$HOME/.zshenv.local"

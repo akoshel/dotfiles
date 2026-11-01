@@ -1,0 +1,26 @@
+# ~/.zshrc — только интерактивная оболочка. Как ../pre-zshrc, но плагины
+# autosuggestions / syntax-highlighting берутся из dnf.
+
+# --- Oh My Zsh ------------------------------------------------------------
+# Он сам делает compinit, историю и клавиши (↑/↓ по началу строки,
+# ctrl+стрелки, Home/End/Delete) — отдельно настраивать не нужно.
+export ZSH="$HOME/.oh-my-zsh"
+ZSH_THEME="lukerandall"
+
+CASE_SENSITIVE="false"
+HYPHEN_INSENSITIVE="false"
+HIST_STAMPS="yyyy-mm-dd"
+HIST_IGNORE_SPACE="true"
+
+plugins=(gitfast)
+
+source "$ZSH/oh-my-zsh.sh"
+
+setopt HIST_IGNORE_ALL_DUPS
+
+# --- Плагины из dnf (после oh-my-zsh; syntax-highlighting — самым последним)
+for f in /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh \
+         /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh; do
+    [ -f "$f" ] && source "$f"
+done
+unset f

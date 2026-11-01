@@ -1,0 +1,54 @@
+// Linux version of keybindings.json: the same alt+N layout. The "-" entries
+// unbind the Linux defaults (IntelliJ keymap + VS Code) instead of the macOS
+// cmd+… ones.
+[
+    {
+        "key": "alt+1",
+        "command": "workbench.view.explorer",
+        "when": "viewContainer.workbench.view.explorer.enabled && !explorerViewletFocus"
+    },
+    {
+        "key": "alt+2",
+        "command": "workbench.view.scm",
+        "when": "workbench.scm.active && activeViewlet != 'workbench.view.scm'"
+    },
+    {
+        "key": "alt+9",
+        "command": "-workbench.view.scm",
+        "when": "workbench.scm.active && activeViewlet != 'workbench.view.scm'"
+    },
+    {
+        "key": "alt+3",
+        "command": "workbench.panel.chat",
+        "when": "workbench.panel.chat.view.copilot.active"
+    },
+    {
+        "key": "ctrl+alt+i",
+        "command": "-workbench.panel.chat",
+        "when": "workbench.panel.chat.view.copilot.active"
+    },
+    {
+        "key": "alt+4",
+        "command": "workbench.view.extension.claude-sidebar-secondary"
+    },
+    {
+        "key": "shift+enter",
+        "command": "workbench.action.terminal.sendSequence",
+        "args": {
+            "text": "\u001b\r"
+        },
+        "when": "terminalFocus"
+    },
+    // GNOME grabs alt+` for "switch windows of an application";
+    // ./install moves that to super+` so VS Code gets the key.
+    {
+        "key": "alt+`",
+        "command": "workbench.action.terminal.toggleTerminal",
+        "when": "terminal.active"
+    },
+    {
+        "key": "ctrl+`",
+        "command": "-workbench.action.terminal.toggleTerminal",
+        "when": "terminal.active"
+    }
+]

@@ -1,0 +1,14 @@
+# VS Code extensions for the Fedora laptop: a subset of ../vscode/extensions.txt.
+# The IntelliJ keymap is here because vscode/keybindings.linux.json builds on it.
+
+anthropic.claude-code
+k--kato.intellij-idea-keybindings
+mhutchie.git-graph
+golang.go
+ms-python.python
+ms-python.vscode-pylance
+ms-python.debugpy
+redhat.vscode-yaml
+esbenp.prettier-vscode
+bierner.markdown-mermaid
+ms-vscode-remote.remote-ssh

@@ -1,0 +1,25 @@
+# dnf packages, one per line. A trimmed-down take on ../Brewfile for a personal
+# laptop: no cloud/Kubernetes/IaC tooling, and no GUI apps besides VS Code.
+# `code` comes from the Microsoft repo that ./install adds first.
+
+# --- Shell ------------------------------------------------------------------
+zsh
+zsh-autosuggestions
+zsh-syntax-highlighting
+
+# --- Git & CLI --------------------------------------------------------------
+git
+git-lfs
+htop
+jq
+wget
+
+# --- Languages & tooling ----------------------------------------------------
+golang
+nodejs
+python3
+uv
+pre-commit
+
+# --- Editor -----------------------------------------------------------------
+code

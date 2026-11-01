@@ -12,6 +12,28 @@ cd ~/codebase/dotfiles
 `./install` is idempotent — re-run it any time. Run individual steps with
 `./install firefox vscode`, and list them with `./install --list`.
 
+## Fedora (personal laptop)
+
+A lighter setup lives in `fedora/`: dnf instead of Homebrew, no cloud/IaC
+tooling, and only the theme and sidebar from the Firefox config.
+
+```bash
+fedora/install            # packages zsh git vscode gnome firefox claude herdr
+fedora/install vscode     # one step
+```
+
+| Path | Description |
+|---|---|
+| `fedora/packages.txt` | dnf packages (VS Code from the Microsoft repo the script adds) |
+| `fedora/vscode-extensions.txt` | Trimmed extension list |
+| `vscode/keybindings.linux.json` | Same alt+N layout, unbinding Linux defaults instead of cmd+… |
+| `fedora/firefox-user.js` | Firefox `user.js`: dark theme, vertical tabs, sidebar tools, Claude as AI chat |
+| `fedora/zshenv`, `fedora/zshrc` | Oh My Zsh (lukerandall, gitfast) + dnf's autosuggestions and syntax-highlighting |
+
+`settings.json`, `git/ignore` and `claude/CLAUDE.md` are shared with macOS. The
+`gnome` step moves GNOME's "switch windows of an application" from alt+\` to
+super+\`, otherwise GNOME swallows VS Code's alt+\` terminal toggle.
+
 ## What is in here
 
 | Path | Description |

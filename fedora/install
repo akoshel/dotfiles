@@ -1,0 +1,232 @@
+#!/usr/bin/env bash
+#
+# Bootstrap the Fedora laptop. A lighter sibling of ../install (macOS).
+#
+# Usage:
+#   fedora/install              # everything
+#   fedora/install vscode herdr # only the named steps
+#   fedora/install --list       # show available steps
+#
+# Safe to re-run. Config is symlinked back to this repo, with any pre-existing
+# file moved aside to *.backup first. Firefox is configured by hand on this
+# machine; only its theme and sidebar are versioned (fedora/firefox-user.js).
+#
+
+set -euo pipefail
+
+FEDORA_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DOTFILES_DIR="$(dirname "$FEDORA_DIR")"
+
+STEPS=(packages zsh git vscode gnome firefox claude herdr)
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+info()  { printf "\033[34m[info]\033[0m  %s\n"  "$1"; }
+ok()    { printf "\033[32m[ok]\033[0m    %s\n"  "$1"; }
+warn()  { printf "\033[33m[warn]\033[0m  %s\n"  "$1"; }
+step()  { printf "\n\033[1;36m▸ %s\033[0m\n"    "$1"; }
+
+# Strip comments and blank lines from a list file.
+read_list() { sed -e 's/#.*//' -e 's/[[:space:]]*$//' -e '/^$/d' "$1"; }
+
+link_file() {
+    local src="$1" dst="$2"
+    mkdir -p "$(dirname "$dst")"
+
+    if [ -L "$dst" ]; then
+        [ "$(readlink "$dst")" = "$src" ] && { ok "already linked $dst"; return; }
+        rm "$dst"
+    elif [ -e "$dst" ]; then
+        warn "backing up $dst -> ${dst}.backup"
+        mv "$dst" "${dst}.backup"
+    fi
+
+    ln -s "$src" "$dst"
+    ok "linked $dst"
+}
+
+# ---------------------------------------------------------------------------
+# Steps
+# ---------------------------------------------------------------------------
+
+setup_packages() {
+    step "dnf packages"
+
+    if [ ! -f /etc/yum.repos.d/vscode.repo ]; then
+        info "adding the Microsoft VS Code repo"
+        sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+        sudo tee /etc/yum.repos.d/vscode.repo >/dev/null <<'REPO'
+[code]
+name=Visual Studio Code
+baseurl=https://packages.microsoft.com/yumrepos/vscode
+enabled=1
+autorefresh=1
+type=rpm-md
+gpgcheck=1
+gpgkey=https://packages.microsoft.com/keys/microsoft.asc
+REPO
+    fi
+
+    mapfile -t pkgs < <(read_list "$FEDORA_DIR/packages.txt")
+    sudo dnf install -y "${pkgs[@]}"
+    ok "packages installed"
+}
+
+setup_zsh() {
+    step "zsh"
+
+    # Clone instead of the official installer: that one replaces ~/.zshrc and
+    # tries to chsh on its own.
+    if [ -d "$HOME/.oh-my-zsh" ]; then
+        ok "Oh My Zsh present (update with: omz update)"
+    else
+        git clone --depth 1 https://github.com/ohmyzsh/ohmyzsh.git "$HOME/.oh-my-zsh"
+        ok "Oh My Zsh installed"
+    fi
+
+    link_file "$FEDORA_DIR/zshenv" "$HOME/.zshenv"
+    link_file "$FEDORA_DIR/zshrc"  "$HOME/.zshrc"
+
+    local zsh_bin
+    zsh_bin="$(command -v zsh || true)"
+    if [ -z "$zsh_bin" ]; then
+        warn "zsh not installed — run the packages step first"
+    elif [ "$(getent passwd "$USER" | cut -d: -f7)" = "$zsh_bin" ]; then
+        ok "login shell is already zsh"
+    else
+        info "changing login shell to $zsh_bin (asks for your password)"
+        chsh -s "$zsh_bin" && ok "login shell set — log out and back in"
+    fi
+}
+
+setup_git() {
+    step "git"
+    # ~/.gitconfig is not versioned — it carries an identity, not config.
+    link_file "$DOTFILES_DIR/git/ignore" "$HOME/.config/git/ignore"
+}
+
+setup_vscode() {
+    step "VS Code"
+    local dir="$HOME/.config/Code/User"
+
+    link_file "$DOTFILES_DIR/vscode/settings.json"          "$dir/settings.json"
+    link_file "$DOTFILES_DIR/vscode/keybindings.linux.json" "$dir/keybindings.json"
+
+    if ! command -v code >/dev/null 2>&1; then
+        warn "code not on PATH — run the packages step, then re-run this one"
+        return
+    fi
+
+    local installed
+    installed="$(code --list-extensions 2>/dev/null | tr '[:upper:]' '[:lower:]')"
+    while read -r ext; do
+        if grep -qxF "$(tr '[:upper:]' '[:lower:]' <<<"$ext")" <<<"$installed"; then
+            ok "extension present: $ext"
+        else
+            code --install-extension "$ext" >/dev/null && ok "installed $ext" \
+                || warn "could not install $ext"
+        fi
+    done < <(read_list "$FEDORA_DIR/vscode-extensions.txt")
+}
+
+setup_gnome() {
+    step "GNOME hotkeys"
+    command -v gsettings >/dev/null 2>&1 || { warn "gsettings missing — skipping"; return; }
+
+    # GNOME binds alt+` to "switch windows of an application", which swallows
+    # the VS Code terminal toggle. Keep only the super+` variant.
+    gsettings set org.gnome.desktop.wm.keybindings switch-group          "['<Super>Above_Tab']"
+    gsettings set org.gnome.desktop.wm.keybindings switch-group-backward "['<Shift><Super>Above_Tab']"
+    ok "alt+\` freed for VS Code (window switching is now super+\`)"
+}
+
+setup_claude() {
+    step "Claude Code"
+    # Only CLAUDE.md is versioned; settings.json is rewritten by Claude Code.
+    link_file "$DOTFILES_DIR/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
+    command -v claude >/dev/null 2>&1 \
+        || info "claude not installed: curl -fsSL https://claude.ai/install.sh | bash"
+}
+
+setup_firefox() {
+    step "Firefox theme"
+
+    # Firefox 147+ creates new profiles under XDG; older installs use ~/.mozilla.
+    local root=""
+    for r in "$HOME/.config/mozilla/firefox" "$HOME/.mozilla/firefox"; do
+        [ -f "$r/profiles.ini" ] && { root="$r"; break; }
+    done
+    [ -n "$root" ] || { warn "Firefox has never run — launch it once, then re-run"; return; }
+
+    # The [Install…] section names the profile Firefox actually launches.
+    local rel
+    rel="$(awk -F= '/^\[Install/{ok=1} ok && /^Default=/{print $2; exit}' "$root/profiles.ini")"
+    [ -n "$rel" ] || rel="$(awk -F= '/^Default=1/{print p} /^Path=/{p=$2}' "$root/profiles.ini" | head -1)"
+    [ -d "$root/$rel" ] || { warn "profile $root/$rel not found"; return; }
+
+    # user.js is only read at startup, so linking it while Firefox runs is safe.
+    link_file "$FEDORA_DIR/firefox-user.js" "$root/$rel/user.js"
+    info "restart Firefox to apply"
+}
+
+setup_herdr() {
+    step "herdr"
+    if command -v herdr >/dev/null 2>&1 || [ -x "$HOME/.local/bin/herdr" ]; then
+        ok "already installed (update with: herdr update)"
+    else
+        # Official installer: checksum-verified binary into ~/.local/bin, no root.
+        curl -fsSL https://herdr.dev/install.sh | sh
+    fi
+
+    local herdr_bin
+    herdr_bin="$(command -v herdr || echo "$HOME/.local/bin/herdr")"
+    [ -x "$herdr_bin" ] || { warn "herdr not found after install — skipping hooks"; return; }
+
+    # herdr owns its agent hooks and overwrites them on update, so let it
+    # install them rather than versioning the generated scripts.
+    for agent in claude codex; do
+        "$herdr_bin" integration install "$agent" 2>/dev/null \
+            && ok "installed herdr $agent integration" \
+            || warn "could not install herdr $agent integration"
+    done
+}
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+main() {
+    if [ "${1:-}" = "--list" ]; then
+        printf "%s\n" "${STEPS[@]}"
+        return
+    fi
+
+    local requested=("$@")
+    [ ${#requested[@]} -eq 0 ] && requested=("${STEPS[@]}")
+
+    for name in "${requested[@]}"; do
+        if ! printf "%s\n" "${STEPS[@]}" | grep -qx "$name"; then
+            warn "unknown step '$name' (see fedora/install --list)"
+            exit 1
+        fi
+    done
+
+    info "dotfiles installer (Fedora) — $(date '+%Y-%m-%d %H:%M')"
+    for name in "${requested[@]}"; do
+        "setup_$name"
+    done
+
+    printf "\n"
+    ok "done"
+    cat <<'NEXT'
+
+Still to do by hand:
+  • recreate ~/.zshenv.local (tokens) if you need any
+  • set your git identity: git config --global user.name / user.email
+  • log out and back in so zsh becomes the login shell
+NEXT
+}
+
+main "$@"
